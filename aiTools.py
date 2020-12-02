@@ -10,10 +10,6 @@ class Aqueue(Astack):
     def pull(self): return self.container.pop(0)
 
 class Node:
-    """ 
-    Base Node class: every states of actual problem to be converted into
-    this datastructure. A node representes each point in the problem set
-    """
     def __init__(self, state=None, action=None, cost=None):
         self.state = state
         self.actions = action
@@ -66,25 +62,9 @@ class Problem:
             print(i, '=:>', state.state, '=:>', state.actions, '=:>', state.parent, '=:>', state.cost)
 
 class Agent:
-    def __init__(self, start_state, end_state, container):
-        #self.state_space = state_space.copy()
-        self.container = container
-        self.state = start_state
+    def __init__(self, end_state):
         self.goal = end_state
         self.memo = list()
-        self.path = list()
-        self.cost = None
-    def action(self):
-        nxt = self.container.pull()
-        self.memo.append(self.state)
-        self.state = nxt
-
-    def explore(self, state_space):
-        if self.state == self.goal:
-            return self.track(state_space, [self.state,])
-        self.transition(state_space)
-        self.action()
-        return self.explore(state_space)
 
     def track(self, state_space,__path=list(), __cost=1):
         if not state_space[__path[-1]].parent:
@@ -93,12 +73,22 @@ class Agent:
         else: __cost +=  state_space[__path[-1]].cost
         __path.append(state_space[__path[-1]].parent)
         return self.track(state_space, __path, __cost)
+    def explore(self, state_space, state, container):
+        if state == self.goal:
+            return self.track(state_space, [state,])
+        state = self.actions(state_space, state, container)
+        return self.explore(state_space, state, container)
+
     # Override
-    def transition(self, state_space):
-        acts = state_space[self.state].actions
-        while acts:
-            tmp = acts.pop(0)
-            if not tmp in self.memo:
-                self.container.put(tmp)
-                state_space[tmp].parent = self.state
+    def actions(self, state_space, state, container):
+        # learn and move forward
+        if not state_space[state].actions:
+            self.memo.append(state)
+            return container.pull()
+        # search for actions
+        nxt = state_space[state].actions.pop(0)
+        if not any(self.memo) is nxt:
+            state_space[nxt].parent = state
+            container.put(nxt)
+            return self.actions(state_space, state, container)
 
