@@ -1,47 +1,51 @@
-from aiUtils.aiTools import Agent
-
-
-class DfsAgent(Agent):
-    def __init__(self, state_space, start, end):
-        super().__init__(state_space, start, end)
-
-    def transition(self):
-        #print('Transition:-')
-        acts = self.state_space[self.state].actions
-        while acts:
-            tmp = acts.pop(0)
-            if not tmp in self.memo:
-                self.container.append(tmp)
-                #print(tmp, '<<is reachable from>>', self.state)
-                self.state_space[tmp].parent = self.state
+class Agent():
+    def __init__(self, state_space, start_state, end_state, container):
+        self.state_space = state_space
+        self.container = container
+        self.state = start_state
+        self.goal = end_state
+        self.memo = list()
+        self.path = list()
+        self.cost = None
 
     def action(self):
         nxt = self.container.pop()
         self.memo.append(self.state)
-        #print('visited:', self.state)
         self.state = nxt
-
-
-#class BfsAgent
-class BfsAgent(Agent):
-    def __init__(self, state_space, start, end):
-        super().__init__(state_space, start, end)
-
+    
+    def explore(self):
+        if self.state == self.goal:
+            self.track()
+            return True
+        self.transition()
+        self.action()
+        return self.explore()
+    
+    def track(self):
+        path = self.state
+        while path:
+            if self.state_space[path].cost:
+                self.cost += self.state_space[path].cost
+            self.path.append(path)
+            path = self.state_space[path].parent
+        self.path = self.path[::-1]
+    # Override
     def transition(self):
-        #print('Transition:-')
         acts = self.state_space[self.state].actions
         while acts:
             tmp = acts.pop(0)
             if not tmp in self.memo:
                 self.container.append(tmp)
-                #print(tmp, '<<is reachable from>>', self.state)
                 self.state_space[tmp].parent = self.state
-        #print('visited:', self.state)
-        self.memo.append(self.state)
 
-    def action(self):
-        #print('\nAction:-\ncontainer:', self.container)
-        #print('memo:\t', self.memo)
-        nxt = self.container.pop(0)
-        #print(f'visiting {nxt}\n')
-        self.state = nxt
+for class Astack:
+    def __init__(self): self.container = list()
+    def put(self, data): self.container.append(data)
+    def pull(self): return self.container.pop()
+    def __contains__(self, key): return key in self.container
+    def empty(self): return not len(self.container)
+
+class Aqueue(AIstack):
+    def __init__(self): super().__init__()
+    def pull(self): return self.container.pop(0)
+    

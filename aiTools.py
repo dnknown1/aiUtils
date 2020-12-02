@@ -1,3 +1,14 @@
+class Astack:
+    def __init__(self): self.container = list()
+    def put(self, data): self.container.append(data)
+    def pull(self): return self.container.pop()
+    def __contains__(self, key): return key in self.container
+    def empty(self): return not len(self.container)
+
+class Aqueue(Astack):
+    def __init__(self): super().__init__()
+    def pull(self): return self.container.pop(0)
+
 class Node:
     """ 
     Base Node class: every states of actual problem to be converted into
@@ -11,7 +22,6 @@ class Node:
 
     def __eq__(self, other):
         return self.state == other.state
-
 
 class Problem:
     @staticmethod
@@ -55,53 +65,40 @@ class Problem:
         for i, state in enumerate(state_space):
             print(i, '=:>', state.state, '=:>', state.actions, '=:>', state.parent, '=:>', state.cost)
 
-
 class Agent:
-    """
-    Base Artificial Agent Class thst percieves a given envioronment and acts upon
-    # defalut container is list
-    """
-    def __init__(self, state_space, start_state, end_state, container=list()):
-        self.state_space = state_space
+    def __init__(self, start_state, end_state, container):
+        #self.state_space = state_space.copy()
         self.container = container
         self.state = start_state
         self.goal = end_state
         self.memo = list()
         self.path = list()
         self.cost = None
-
-    # override
-    def transition(self):
-        pass
-
-    # override
     def action(self):
-        pass
+        nxt = self.container.pull()
+        self.memo.append(self.state)
+        self.state = nxt
 
-    # track path and cost
-    def track(self):
-        path = self.state
-        while path:
-            if self.state_space[path].cost:
-                self.cost += self.state_space[path].cost
-            self.path.append(path)
-            path = self.state_space[path].parent
-        self.path = self.path[::-1]
-
-    # Only to run
-    def explore(self):
+    def explore(self, state_space):
         if self.state == self.goal:
-            self.track()
-            return True
-        self.transition()
+            return self.track(state_space, [self.state,])
+        self.transition(state_space)
         self.action()
-        return self.explore()
+        return self.explore(state_space)
 
-    def __reset(self):
-        self.state_space = None
-        self.container = None
-        self.state = None
-        self.goal = None
-        self.memo = None
-        self.path = None
-        self.cost = None
+    def track(self, state_space,__path=list(), __cost=1):
+        if not state_space[__path[-1]].parent:
+            return (__cost, __path[::-1])
+        if not state_space[__path[-1]].cost: __cost += 1 
+        else: __cost +=  state_space[__path[-1]].cost
+        __path.append(state_space[__path[-1]].parent)
+        return self.track(state_space, __path, __cost)
+    # Override
+    def transition(self, state_space):
+        acts = state_space[self.state].actions
+        while acts:
+            tmp = acts.pop(0)
+            if not tmp in self.memo:
+                self.container.put(tmp)
+                state_space[tmp].parent = self.state
+
